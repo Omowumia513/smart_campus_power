@@ -1,0 +1,180 @@
+@startuml Smart_Campus_Power_Management
+
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+skinparam linetype ortho
+
+' ─── Exceptions ───────────────────────────────────────────────────────────
+class MeterFaultError <<Exception>> {
+  +meter_id : str
+  +fault_code : str
+  +detail : str
+  +timestamp : datetime
+  +__init__(meter_id, fault_code, detail)
+  +__repr__() : str
+}
+
+class OverloadError <<Exception>> {
+  +__repr__() : str
+}
+
+class TariffConfigError <<Exception>> {
+  +field : str
+  +value : Any
+  +reason : str
+  +__init__(field, value, reason)
+  +__repr__() : str
+}
+
+MeterFaultError <|-- OverloadError : inherits
+
+' ─── PowerReading ─────────────────────────────────────────────────────────
+class PowerReading <<total_ordering>> {
+  -_meter_id : str
+  -_kwh : float
+  -_voltage : float
+  -_current : float
+  -_timestamp : datetime
+  +meter_id : str <<property>>
+  +kwh : float <<property>>
+  +voltage : float <<property>>
+  +current : float <<property>>
+  +timestamp : datetime <<property>>
+  +__add__(other) : PowerReading
+  +__radd__(other) : PowerReading
+  +__eq__(other) : bool
+  +__lt__(other) : bool
+  +__hash__() : int
+  +__str__() : str
+  +__repr__() : str
+}
+
+' ─── TariffSchedule ───────────────────────────────────────────────────────
+class TariffSchedule {
+  -_peak_rate : float
+  -_off_peak_rate : float
+  +peak_rate_ngn_per_kwh : float <<property>>
+  +off_peak_rate_ngn_per_kwh : float <<property>>
+  +from_dict(config: dict) : TariffSchedule <<classmethod>>
+  +rate_for(hour: int) : float
+  +__str__() : str
+  +__repr__() : str
+}
+
+TariffSchedule ..> TariffConfigError : <<throws>>
+
+' ─── MeterDevice ABC ──────────────────────────────────────────────────────
+abstract class MeterDevice <<abstract>> {
+  -_readings : List[PowerReading]
+  -_flagged : bool
+  +{abstract} meter_id : str <<property>>
+  +{abstract} location : str <<property>>
+  +{abstract} voltage_rating : float <<property>>
+  +{abstract} take_reading(current, timestamp) : PowerReading
+  +{abstract} is_overloaded() : bool
+  +readings : List[PowerReading] <<property>>
+  +flagged : bool <<property>>
+  +flag() : None
+  +total_kwh() : float
+  +simulate_24h(base_current, start, overload_at_hour) : List
+  +__str__() : str
+  +__repr__() : str
+}
+
+MeterDevice *-- PowerReading : creates / owns >
+
+' ─── Concrete Meter Subclasses ────────────────────────────────────────────
+class SinglePhaseMeter {
+  +meter_id : str <<property>>
+  +location : str <<property>>
+  +voltage_rating : float <<property>>
+  +take_reading(current, timestamp) : PowerReading
+  +is_overloaded() : bool
+}
+
+class ThreePhaseMeter {
+  -_power_factor : float
+  +power_factor : float <<property>>
+  +meter_id : str <<property>>
+  +location : str <<property>>
+  +voltage_rating : float <<property>>
+  +take_reading(current, timestamp) : PowerReading
+  +is_overloaded() : bool
+}
+
+class SolarFeedMeter {
+  +meter_id : str <<property>>
+  +location : str <<property>>
+  +voltage_rating : float <<property>>
+  +take_reading(current, timestamp) : PowerReading
+  +is_overloaded() : bool
+  +net_export_kwh() : float
+}
+
+MeterDevice <|-- SinglePhaseMeter : inherits
+MeterDevice <|-- ThreePhaseMeter  : inherits
+MeterDevice <|-- SolarFeedMeter   : inherits
+
+' ─── FaultAlert ───────────────────────────────────────────────────────────
+class FaultAlert <<total_ordering>> {
+  -_severity : str
+  -_message : str
+  -_meter_id : str
+  -_timestamp : datetime
+  +severity : str <<property>>
+  +message : str <<property>>
+  +meter_id : str <<property>>
+  +timestamp : datetime <<property>>
+  +__eq__(other) : bool
+  +__lt__(other) : bool
+  +__hash__() : int
+  +__str__() : str
+  +__repr__() : str
+}
+
+' ─── BuildingZone ─────────────────────────────────────────────────────────
+class BuildingZone {
+  -_name : str
+  -_zone_type : str
+  -_meters : List[MeterDevice]
+  +name : str <<property>>
+  +zone_type : str <<property>>
+  +add_meter(meter: MeterDevice) : None
+  +remove_meter(meter_id: str) : None
+  +compute_zone_total() : PowerReading
+  +active_alert_count(campus_alerts) : int
+  +__len__() : int
+  +__contains__(item) : bool
+  +__iter__() : Iterator
+  +__str__() : str
+  +__repr__() : str
+}
+
+BuildingZone o-- MeterDevice : aggregates (0..*) >
+BuildingZone ..> PowerReading : <<returns>>
+
+' ─── CampusGrid ───────────────────────────────────────────────────────────
+class CampusGrid {
+  -_campus_name : str
+  -_zones : List[BuildingZone]
+  -_alerts : List[FaultAlert]
+  -_tariff : TariffSchedule
+  +add_zone(zone: BuildingZone) : None
+  +get_zone(name: str) : BuildingZone
+  +raise_alert(alert: FaultAlert) : None
+  +alerts : List[FaultAlert] <<property>>
+  +sorted_alerts() : List[FaultAlert]
+  +check_overloads() : None
+  +compute_bill(meter: MeterDevice) : float
+  +generate_report() : str
+  +generate_alert_report() : str
+  +__str__() : str
+  +__repr__() : str
+}
+
+CampusGrid *-- BuildingZone   : owns (composition, 1..*) >
+CampusGrid *-- FaultAlert     : owns (composition, 0..*) >
+CampusGrid --> TariffSchedule : uses >
+CampusGrid ..> OverloadError  : <<raises>>
+
+@enduml
