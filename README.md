@@ -14,7 +14,7 @@ The **Smart Campus Power Management System** is a Python OOP application that mo
 | Adekunle Micheal Testimony| CPE/2023/1006 | @protocol238 |
 | Adeyeye Abdulsamad] | CPE/2023/1014| @Samad177 |
 | Adesoji Princess Dorcas| CPE/2023/1013 | @adesojiprincess04 |
-| [Member 5 Full Name] | FUOYE/2022/004 | @username4 |
+| Ademola Ibukun Maria| CPE/2023/1009 | @ibkblessing756-oss |
 | [Member 6 Full Name] | FUOYE/2022/004 | @username4 |
 | [Member 7 Full Name] | FUOYE/2022/004 | @username4 |
 | [Member 8 Full Name] | FUOYE/2022/004 | @username4 |
