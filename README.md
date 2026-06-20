@@ -1,4 +1,4 @@
-# Smart Campus Power Management System
+⁹# Smart Campus Power Management System
 
 ## 1. Project Title and Overview
 
@@ -12,7 +12,7 @@ The **Smart Campus Power Management System** is a Python OOP application that mo
 |-----------|---------------|-----------------|
 | Adeleye Omowumi Agnes | CPE/2023/1008 | @Omowumi513 |
 | Adekunle Micheal Testimony| CPE/2023/1006 | @protocol238 |
-| Adeyeye Abdulsamad] | CPE/2023/1014| @Samad177 |
+| Adesoji PrincessDorcas| CPE/2023/1013 | adesojiprincess04 |
 | [Member 4 Full Name] | FUOYE/2022/004 | @username4 |
 
 ---
